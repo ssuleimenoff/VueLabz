@@ -1,5 +1,4 @@
 <template>
-  <!-- TouristItemComponent.vue: Displays a tourist attraction with an image, name, and description -->
   <div class="tourist-item">
     <img :src="image" :alt="name" class="pixelated" />
     <h2 class="pixelated-title">{{ name }}</h2>
@@ -35,7 +34,7 @@ export default {
 .pixelated-title {
   font-family: 'Press Start 2P', cursive; 
   font-size: 24px;
-  color: #e74c3c; 
+  color: #090979; 
   margin: 10px 0; 
 }
 

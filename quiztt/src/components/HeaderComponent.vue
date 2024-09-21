@@ -5,7 +5,10 @@
 <script>
 export default {
     props: {
-    title: String
+        title: {
+            type: String,
+            default: '' 
+        }
     }
 }
 </script>
@@ -13,5 +16,8 @@ export default {
 <style scoped>
 .header-title {
     color: white;
+    font-family: 'Press Start 2P', cursive;
+    text-align: center;
+    margin: 20px 0;    
 }
 </style>

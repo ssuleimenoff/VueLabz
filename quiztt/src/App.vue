@@ -36,7 +36,8 @@
       </div>
     </div>
 
-    <FooterComponent />
+    <FooterComponent 
+    class="ftr-css"/>
   </div>
 </template>
 
@@ -64,7 +65,7 @@ html, body {
 }
 
 .background {
-  background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
+  background: linear-gradient(90deg, rgba(2,0,36,1) 0%, #090979 35%, rgba(0,212,255,1) 100%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
