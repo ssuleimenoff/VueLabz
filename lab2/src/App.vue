@@ -25,8 +25,12 @@ export default {
   background-image: url('assets/background/background.jpg');
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
   background-attachment: fixed;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
 
   margin: 0;
   padding: 0;

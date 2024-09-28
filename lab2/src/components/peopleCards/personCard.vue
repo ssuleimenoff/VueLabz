@@ -1,29 +1,17 @@
 <template>
-<!--  <div class="person-card" :key="person.id">-->
-<!--    <img :src="person.Avatar" alt="Avatar" class="avatar" />-->
-<!--    <h2 class="person-name">{{ person.PersonName }}</h2>-->
-<!--    <p class="pub-date">{{ formattedPubDate }}</p>-->
-<!--    <p class="rating">Rating: {{ person.Rating }}</p>-->
-<!--    <p class="commentary">{{ person.Commentary }}</p>-->
-<!--    <p class="topic">Topic: {{ person.Topic }}</p>-->
-<!--  </div>-->
-
   <div class="person-card" :key="person.id">
     <div class="person-info">
       <span class="person-name">
-        {{person.PersonName}}
-        {{formattedPubDate}}
+        {{ person.PersonName }}
+        {{ formattedPubDate }}
       </span>
 
       <span class="rating">
         RATING
         <div class="rating-stars">
-          <i
-              v-for="star in 5"
-              :key="star"
-              :class="['fa', 'fa-star', { filled: star <= person.Rating, 'star-empty': star > person.Rating }]"
-              aria-hidden="true"
-          ></i>
+          <i v-for="star in 5" :key="star"
+            :class="['fa', 'fa-star', { filled: star <= person.Rating, 'star-empty': star > person.Rating }]"
+            aria-hidden="true"></i>
         </div>
       </span>
 
@@ -33,7 +21,7 @@
     </div>
 
     <span class="comment-section">
-      {{person.Commentary}}
+      {{ person.Commentary }}
     </span>
 
     <button class="like-button" @click="like">
@@ -59,7 +47,7 @@ export default {
     formattedPubDate() {
       const date = new Date(this.person.PubDate);
       return date.toLocaleDateString();
-    },
+    }
   },
   methods: {
     like() {
@@ -158,10 +146,8 @@ export default {
   line-height: 20px;
 }
 
-.like-button:hover{
+.like-button:hover {
   background: #45C330;
 
 }
-
-
 </style>

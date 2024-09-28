@@ -23,7 +23,6 @@
       </span>
     </div>
 
-
     <div class="cards-grid">
       <div class="card" v-for="person in paginatedPeople" :key="person.id">
         <person-card :person="person" @like="handleLike"></person-card>
@@ -35,20 +34,21 @@
 
 <script>
 import { getTodayDate } from '@/utils/dateUtils';
-import { people } from '@/data/peopleData';
+import { peo } from '@/data/peopleData';
 import {selectedCategory} from "@/components/peopleCards/state";
 import PersonCard from "@/components/peopleCards/personCard.vue";
 import _ from "lodash";
+import {ref} from "vue";
 
 export default {
   components: {PersonCard},
   setup(){
-    return { selectedCategory }
+    const people = ref(peo);
+    return {selectedCategory, people}
   },
   data() {
     return {
       todayDate: '',
-      people: people,
       selectedFilter: 'Rating',
       currentPage: 1,
       perPage: 4,
@@ -58,7 +58,6 @@ export default {
     this.todayDate = getTodayDate();
   },
   computed: {
-
     filteredPeople() {
       let filteredByCategory = this.people;
 
@@ -70,6 +69,9 @@ export default {
       if (this.selectedCategory === 'All'){
         filteredByCategory = this.people
       }
+
+      // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+      this.currentPage = 1
 
       if (this.selectedFilter === 'PubDate') {
         return _.orderBy(filteredByCategory, ['PubDate'], ['desc']);
@@ -106,7 +108,6 @@ export default {
     handleLike(personId) {
       const person = this.people.find(p => p.id === personId);
       if (person) {
-        // Increment the rating by 0.1, but ensure it doesn't exceed 5
         person.Rating = Math.min((person.Rating + 0.1).toFixed(1), 5);
       }
     },
@@ -115,7 +116,6 @@ export default {
 </script>
 
 <style scoped>
-
 @import url('https://fonts.googleapis.com/css2?family=Jersey+15&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inknut+Antiqua:wght@400;500;600;700&display=swap');
 
@@ -192,14 +192,20 @@ export default {
 
 .filter-section {
   margin-left: 130px;
+  height: 38px;
 
   display: flex;
   align-items: flex-start;
   justify-content: center;
+
+  background: #EEFCF7;
 }
 
 .filter-section select {
-  background: #EEFCF7;
+  //background: #EEFCF7;
+  background: url("../../assets/peopleList/polygon.svg") no-repeat right 5px top 8px;
+  appearance:none;
+
   width: 187px;
   height: 38px;
 
@@ -214,12 +220,13 @@ export default {
   text-align: center;
 
   color: #1DE390;
+  z-index: 999;
 }
 
 .selector-image {
   position: absolute;
-  left: 761px;
-  top: 237px;
+  left: 750px;
+  top: 230px;
 }
 
 .pagination {

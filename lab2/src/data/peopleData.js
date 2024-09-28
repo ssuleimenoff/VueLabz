@@ -1,4 +1,5 @@
-export const people = [
+
+export const peo = [
     {
         id: 1,
         PersonName: 'John Doe',
@@ -178,5 +179,5 @@ export const people = [
         Rating: 4.7,
         Commentary: 'Exploring exotic flavors through cooking.',
         Topic: 'Food',
-    },
+    }
 ];
