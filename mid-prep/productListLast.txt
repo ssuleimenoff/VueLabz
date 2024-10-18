@@ -1,0 +1,425 @@
+<template>
+   <div class="page-container">
+      <!-- Header -->
+      <header class="header">
+         <div class="logo">
+            <NuxtLink to="/" class="logo-text">WSHOP</NuxtLink>
+         </div>
+         <nav class="nav-links">
+            <NuxtLink to="/" class="nav-link">ALL PRODUCTS</NuxtLink>
+            <NuxtLink to="/about" class="nav-link">ABOUT</NuxtLink>
+            <NuxtLink to="/support" class="nav-link">SUPPORT</NuxtLink>
+         </nav>
+         <div class="header-actions">
+            <!-- Search Bar -->
+            <div class="search-container">
+               <input type="text" class="search-input" placeholder="Search..." v-model="searchQuery" />
+            </div>
+            <NuxtLink to="/cart" class="cart-icon">
+               <!-- Cart Icon -->
+               <svg xmlns="http://www.w3.org/2000/svg" fill="black" width="24px" height="24px" viewBox="0 0 24 24">
+                  <path
+                     d="M7 4V2H2v2h2.38l1.7 7.58C5.79 12.49 5 13.59 5 15c0 2.21 1.79 4 4 4h10c2.21 0 4-1.79 4-4 0-1.41-.79-2.51-1.88-3.42L17.62 4H7zm0 2h10l1.31 6H8.63L7 6zm-3 9c-1.11 0-2 .89-2 2s.89 2 2 2 2-.89 2-2-.89-2-2-2zm14 0c-1.11 0-2 .89-2 2s.89 2 2 2 2-.89 2-2-.89-2-2-2z" />
+               </svg>
+            </NuxtLink>
+         </div>
+      </header>
+
+      <div class="content-container">
+         <!-- Filters on the left -->
+         <aside class="filters">
+            <h2 class="category-title">Category (Phones for example)</h2>
+
+            <div class="filter-section">
+               <h2 class="filter-title">Filter</h2>
+               <div class="filter-content">
+                  <h3 class="filter-label">Cost</h3>
+                  <input type="number" v-model="minCost" placeholder="100 " class="filter-input" />
+                  <input type="number" v-model="maxCost" placeholder="5000$" class="filter-input" />
+               </div>
+            </div>
+
+            <div class="filter-section">
+               <h2 class="filter-title">Company</h2>
+               <div class="filter-content">
+                  <div v-for="company in companies" :key="company" class="filter-option">
+                     <label class="checkbox-label">
+                        <input type="checkbox" :value="company" v-model="selectedCompanies" class="checkbox" />
+                        <span :class="{ active: selectedCompanies.includes(company) }">{{ company }}</span>
+                        <span class="company-count">(265)</span>
+                     </label>
+                  </div>
+               </div>
+            </div>
+
+            <div class="filter-section">
+               <h2 class="filter-title">Rating</h2>
+               <div class="filter-content">
+                  <div v-for="star in 5" :key="star" class="filter-option">
+                     <label class="radio-label">
+                        <input type="radio" name="rating" :value="star" v-model="selectedRating" class="radio" />
+                        <span :class="{ active: selectedRating === star }" class="rating-stars">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#E8AA31">
+                              <path
+                                 d="M10 15.27L16.18 20 14.54 13.97 20 9.24 13.81 8.63 10 2 6.19 8.63 0 9.24 5.46 13.97 3.82 20z" />
+                           </svg>
+                           {{ star }}/5
+                        </span>
+                     </label>
+                  </div>
+               </div>
+            </div>
+         </aside>
+
+         <!-- Main product list content -->
+         <main class="product-list-container">
+            <div class="popularity-container">
+               <h2>Popularity</h2>
+            </div>
+
+            <div class="products-grid">
+               <div v-for="product in paginatedProducts" :key="product.id" class="product-card">
+                  <NuxtLink :to="{ name: 'products-id', params: { id: product.id } }" class="product-link">
+                     <img :src="product.images[0].url" :alt="product.name" class="product-image" width="320px" height="320px"/>
+                     <h2 class="product-name">{{ product.name }}</h2>
+                     <div class="product-rating">
+                        <svg v-for="star in 5" :key="star" class="star-icon"
+                           :fill="star <= product.rating ? '#E8AA31' : '#ddd'" width="20" height="20">
+                           <path
+                              d="M10 15.27L16.18 20 14.54 13.97 20 9.24 13.81 8.63 10 2 6.19 8.63 0 9.24 5.46 13.97 3.82 20z" />
+                        </svg>
+                        <span class="review-count">{{ product.reviews }} 12 reviews</span>
+                     </div>
+                     <p class="product-price">{{ product.price }} $</p>
+                  </NuxtLink>
+               </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+               <button @click="currentPage = currentPage - 1" :disabled="currentPage === 1"><</button>
+               <button v-for="page in totalPages" :key="page" @click="currentPage = page"
+                  :class="{ active: currentPage === page }">{{ page }}</button>
+               <button @click="currentPage = currentPage + 1" :disabled="currentPage === totalPages">></button>
+            </div>
+         </main>
+      </div>
+   </div>
+</template>
+
+<script setup>
+import { computed, ref } from 'vue';
+import { useProductsStore } from '@/store/products';
+
+// Fetch products from Pinia store
+const productsStore = useProductsStore();
+const products = computed(() => productsStore.products);
+
+// Search field
+const searchQuery = ref('');
+
+// Price filter variables
+const minCost = ref(1000); // Minimum price
+const maxCost = ref(5000); // Maximum price
+
+// Companies for filtering
+const companies = ['Samsung', 'Apple', 'Huawei', 'Sony', 'Xiaomi'];
+const selectedCompanies = ref([]); // Selected companies
+
+// Rating filter
+const selectedRating = ref(null);
+
+// Logic for filtering products
+const filteredProducts = computed(() =>
+   products.value.filter((product) => {
+      // Check if product matches the search query
+      const matchesSearch = product.name
+         .toLowerCase()
+         .includes(searchQuery.value.toLowerCase());
+      // Check if product falls within the price range
+      const matchesCost =
+         product.price >= minCost.value && product.price <= maxCost.value;
+      // Check if product matches selected company
+      const matchesCompany =
+         selectedCompanies.value.length === 0 ||
+         selectedCompanies.value.includes(product.company);
+      // Check if product matches selected rating
+      const matchesRating =
+         !selectedRating.value || product.rating === selectedRating.value;
+      // Return product if all conditions are met
+      return matchesSearch && matchesCost && matchesCompany && matchesRating;
+   })
+);
+
+// Pagination
+const currentPage = ref(1);
+const itemsPerPage = 6; // Number of products per page
+const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
+
+// Products to be shown on the current page
+const paginatedProducts = computed(() => {
+   const start = (currentPage.value - 1) * itemsPerPage;
+   const end = start + itemsPerPage;
+   return filteredProducts.value.slice(start, end);
+});
+</script>
+
+<style scoped>
+/* Import Montserrat font */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap');
+
+body {
+   font-family: 'Montserrat', sans-serif;
+}
+
+/* General layout */
+.page-container {
+   display: flex;
+   flex-direction: column;
+   min-height: 100vh;
+}
+
+/* Header */
+.header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 15px 40px;
+   background-color: #f5f5f5;
+   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+   font-family: 'Montserrat', sans-serif;
+}
+
+.logo-text {
+   font-weight: bold;
+   font-size: 24px;
+   color: #000;
+}
+
+.nav-links {
+   display: flex;
+   gap: 30px;
+}
+
+.nav-link {
+   font-size: 16px;
+   color: #000;
+   text-decoration: none;
+}
+
+.nav-link:hover {
+   text-decoration: underline;
+}
+
+.header-actions {
+   display: flex;
+   align-items: center;
+   gap: 15px;
+}
+
+/* Search bar */
+.search-container {
+   display: flex;
+}
+
+.search-input {
+   padding: 5px;
+   border: 1px solid #ccc;
+   border-radius: 4px;
+   width: 150px;
+}
+
+/* Filters and main content */
+.content-container {
+   display: flex;
+   flex: 1;
+   justify-content: center;
+   gap: 118px; /* Move filters 60px closer to the center */
+}
+
+/* Filters */
+.filters {
+   background-color: #ffffff;
+   color: #000000;
+   padding: 20px;
+   width: 300px;
+   border-right: 1px solid #e0e0e0;
+   margin-left: 60px;
+   border-radius: 8px;
+   border-right: 1px solid #e0e0e0;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.category-title {
+   margin-bottom: 20px;
+   font-weight: 600;
+   font-family: 'Montserrat', sans-serif;
+
+}
+
+.filter-section {
+   border-bottom: 1px solid #e0e0e0;
+   padding-bottom: 20px;
+   margin-bottom: 20px;
+}
+
+.filter-title {
+   font-size: 1.2rem;
+   font-weight: 600;
+   margin-bottom: 15px;
+   background-color: #000;
+   color: #fff;
+   padding: 5px 10px;
+   font-family: 'Montserrat', sans-serif;
+
+}
+
+.filter-content {
+   padding-left: 10px;
+}
+
+.filter-input {
+   width: calc(50% - 5px);
+   padding: 5px;
+   margin-bottom: 10px;
+   border: 1px solid #e0e0e0;
+   border-radius: 4px;
+}
+
+.checkbox-label,
+.radio-label {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.company-count {
+   font-size: 0.9rem;
+   color: #e8aa31;
+}
+
+.active {
+   color: #E8AA31;
+   font-weight: bold;
+}
+
+/* Product listing */
+.product-list-container {
+   flex-grow: 1;
+   padding: 20px;
+}
+
+.products-grid {
+   display: grid;
+   grid-template-columns: repeat(3, 1fr); /* Three products per row */
+   gap: 20px;
+   flex-wrap: wrap;
+   align-items: stretch;
+   justify-content: space-between;
+}
+
+.product-card {
+   display: flex;
+   flex-direction: column;
+   justify-content: flex-start;
+   width: 100%;
+   background-color: #fff;
+   border: 1px solid #e0e0e0;
+   border-radius: 8px;
+   padding: 10px;
+   overflow: hidden;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+   transition: transform 0.2s, box-shadow 0.2s;
+   padding: 10px;
+   min-height: 400px;
+   
+}
+.product-card img {
+   max-width: 100%;
+   height: 200px;
+   object-fit: contain;
+   margin-bottom: 15px;
+}
+
+.product-card:hover {
+   transform: scale(1.05);
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.product-link {
+   text-decoration: none;
+   color: inherit;
+   display: block;
+   text-align: center;
+}
+
+.product-image {
+   max-width: 100%;
+   height: auto;
+   margin-bottom: 10px;
+}
+
+.product-name {
+   font-size: 1.25rem;
+   margin: 10px 10px;
+   text-align: left;
+   min-height: 40px;
+   margin-top: auto;
+}
+
+.product-rating {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   gap: 5px;
+   margin-bottom: 10px;
+   margin-top: auto;
+}
+
+.review-count {
+   font-size: 0.9rem;
+   color: #aaa;
+}
+
+.product-price {
+   font-size: 1.25rem;
+   color: #4caf50;
+   font-weight: bold;
+   text-align: left;
+   padding-left: 10px;
+   margin-top: auto;
+   border-top: 1px solid #e0e0e0;
+   padding-top: 10px;
+}
+
+/* Pagination */
+.pagination {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   margin-top: 20px;
+}
+
+.pagination button {
+   border: none;
+   background-color: white;
+   color: black;
+   padding: 8px 12px;
+   cursor: pointer;
+   margin: 0 4px;
+   border-radius: 50%;
+}
+
+.pagination button.active {
+   background-color: #E8AA31;
+   color: white;
+}
+
+.pagination button:disabled {
+   cursor: not-allowed;
+   opacity: 0.6;
+}
+h2 {
+   font-family: 'Montserrat', sans-serif;
+}
+</style>

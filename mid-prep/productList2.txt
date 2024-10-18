@@ -1,0 +1,312 @@
+<template>
+   <div class="page-container">
+      <!-- Header -->
+      <header class="header">
+         <div class="logo">
+            <NuxtLink to="/" class="logo-text">WISHOP</NuxtLink>
+         </div>
+
+         <nav class="nav-links">
+            <NuxtLink to="/" class="nav-link">All Products</NuxtLink>
+            <NuxtLink to="/about" class="nav-link">About</NuxtLink>
+            <NuxtLink to="/support" class="nav-link">Support</NuxtLink>
+         </nav>
+
+         <div class="header-actions">
+            <!-- Поисковик в минималистичном стиле -->
+            <div class="search-container">
+               <input type="text" class="search-input" placeholder="Search for products..." v-model="searchQuery" />
+            </div>
+            <NuxtLink to="/cart" class="cart-icon">
+               <!-- Минималистичная иконка корзинки -->
+               <svg xmlns="http://www.w3.org/2000/svg" fill="black" width="24px" height="24px" viewBox="0 0 24 24">
+                  <path
+                     d="M7 4V2H2v2h2.38l1.7 7.58C5.79 12.49 5 13.59 5 15c0 2.21 1.79 4 4 4h10c2.21 0 4-1.79 4-4 0-1.41-.79-2.51-1.88-3.42L17.62 4H7zm0 2h10l1.31 6H8.63L7 6zm-3 9c-1.11 0-2 .89-2 2s.89 2 2 2 2-.89 2-2-.89-2-2-2zm14 0c-1.11 0-2 .89-2 2s.89 2 2 2 2-.89 2-2-.89-2-2-2z" />
+               </svg>
+            </NuxtLink>
+         </div>
+      </header>
+
+      <div class="content-container">
+         <!-- Фильтры слева -->
+         <aside class="filters">
+            <h2 class="filter-title">Filter</h2>
+
+            <!-- Фильтр по цене -->
+            <div class="filter-section">
+               <h3 class="filter-label">Cost</h3>
+               <input type="number" v-model="minCost" placeholder="100$" class="filter-input" />
+               <input type="number" v-model="maxCost" placeholder="5000$" class="filter-input" />
+            </div>
+
+            <!-- Фильтр по компании -->
+            <div class="filter-section">
+               <h3 class="filter-label">Company</h3>
+               <div v-for="company in companies" :key="company.name" class="filter-option">
+                  <label>
+                     <input type="checkbox" :value="company.name" v-model="selectedCompanies" class="checkbox" />
+                     <span :class="{ active: selectedCompanies.includes(company.name) }">{{ company.name }}</span> 
+                     <span class="company-count">({{ company.count }})</span>
+                  </label>
+               </div>
+            </div>
+
+            <!-- Фильтр по рейтингу -->
+            <div class="filter-section">
+               <h3 class="filter-label">Rating</h3>
+               <div v-for="star in 5" :key="star" class="filter-option">
+                  <label>
+                     <input type="radio" name="rating" :value="star" v-model="selectedRating" class="radio" />
+                     <span :class="{ active: selectedRating === star }">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#E8AA31">
+                           <path
+                              d="M10 15.27L16.18 20 14.54 13.97 20 9.24 13.81 8.63 10 2 6.19 8.63 0 9.24 5.46 13.97 3.82 20z" />
+                        </svg>
+                        {{ star }} Star
+                     </span>
+                  </label>
+               </div>
+            </div>
+         </aside>
+
+         <!-- Основной контент с продуктами -->
+         <main class="product-list-container">
+            <div class="popularity-container">
+               <h2>Popularity</h2>
+            </div>
+            <div class="products-grid">
+               <div v-for="product in filteredProducts" :key="product.id" class="product-card">
+                  <NuxtLink :to="{ name: 'products-id', params: { id: product.id } }" class="product-link">
+                     <img :src="product.image" :alt="product.name" class="product-image" />
+                     <h2 class="product-name">{{ product.name }}</h2>
+                     <div class="product-rating">
+                        <svg v-for="star in 5" :key="star" class="star-icon"
+                           :fill="star <= product.rating ? '#E8AA31' : '#ddd'" width="20" height="20">
+                           <path
+                              d="M10 15.27L16.18 20 14.54 13.97 20 9.24 13.81 8.63 10 2 6.19 8.63 0 9.24 5.46 13.97 3.82 20z" />
+                        </svg>
+                     </div>
+                     <p class="product-price">{{ product.price }} ₸</p>
+                  </NuxtLink>
+               </div>
+            </div>
+
+            <!-- Слайдер в виде кругов -->
+            <div class="slider-container">
+               <div class="slider">
+                  <button v-for="num in sliderItems" :key="num"
+                     :class="['slider-button', { active: currentSlider === num }]" @click="currentSlider = num">
+                     {{ num }}
+                  </button>
+               </div>
+            </div>
+         </main>
+      </div>
+   </div>
+</template>
+
+<script setup>
+import { computed, ref } from 'vue';
+import { useProductsStore } from '@/store/products';
+
+// Получаем продукты из Pinia store
+const productsStore = useProductsStore();
+const products = computed(() => productsStore.products);
+
+// Поле поиска
+const searchQuery = ref('');
+
+// Переменные для фильтрации по цене
+const minCost = ref(100); // Начальная стоимость
+const maxCost = ref(5000); // Максимальная стоимость
+
+// Компании для фильтрации
+const companies = [
+  { name: 'Samsung', count: 250 },
+  { name: 'Apple', count: 265 },
+  { name: 'Huawei', count: 150 },
+  { name: 'Sony', count: 100 },
+  { name: 'Xiaomi', count: 300 }
+];
+const selectedCompanies = ref([]); // Список выбранных компаний
+
+// Переменная для фильтрации по рейтингу
+const selectedRating = ref(null);
+
+// Логика фильтрации продуктов
+const filteredProducts = computed(() =>
+   products.value.filter((product) => {
+      // Проверка совпадения по поисковому запросу
+      const matchesSearch = product.name
+         .toLowerCase()
+         .includes(searchQuery.value.toLowerCase());
+
+      // Проверка диапазона цен
+      const matchesCost =
+         product.price >= minCost.value && product.price <= maxCost.value;
+
+      // Проверка компании
+      const matchesCompany =
+         selectedCompanies.value.length === 0 ||
+         selectedCompanies.value.includes(product.company);
+
+      // Проверка рейтинга
+      const matchesRating =
+         !selectedRating.value || product.rating === selectedRating.value;
+
+      // Возвращаем продукт, если он соответствует всем условиям
+      return matchesSearch && matchesCost && matchesCompany && matchesRating;
+   })
+);
+
+// Слайдер
+const currentSlider = ref(1);
+const sliderItems = [1, 2, 3]; // Количество страниц слайдера
+</script>
+
+<style scoped>
+/* Общий контейнер */
+.page-container {
+   display: flex;
+   flex-direction: column;
+   min-height: 100vh;
+}
+
+/* Header */
+.header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 15px 40px;
+   background-color: #f5f5f5;
+   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Контейнер с фильтрами и продуктами */
+.content-container {
+   display: flex;
+   flex: 1;
+}
+
+/* Фильтры */
+.filters {
+   background-color: #141414;
+   color: white;
+   padding: 20px;
+   width: 250px;
+}
+
+/* Заголовок фильтров */
+.filter-title {
+   font-size: 1.5rem;
+   margin-bottom: 20px;
+}
+
+/* Фильтр секция */
+.filter-section {
+   margin-bottom: 15px;
+}
+
+/* Заголовок фильтров */
+.filter-label {
+   font-weight: bold;
+}
+
+/* Входные поля фильтров */
+.filter-input {
+   width: calc(100% - 20px);
+   padding: 10px;
+   margin-bottom: 10px;
+   border: 1px solid #e0e0e0;
+   border-radius: 5px;
+}
+
+/* Опция фильтра */
+.filter-option {
+   display: flex;
+   align-items: center;
+   margin-bottom: 5px;
+}
+
+/* Чекбоксы */
+.checkbox {
+   margin-right: 10px;
+   accent-color: #E8AA31; /* Стиль чекбоксов */
+}
+
+/* Количество продуктов */
+.company-count {
+   color: #888;
+   margin-left: 10px;
+}
+
+/* Карточка продукта */
+.product-card {
+   border: 1px solid #e0e0e0;
+   border-radius: 8px;
+   overflow: hidden;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+   transition: transform 0.2s, box-shadow 0.2s;
+   padding: 20px;
+   text-align: center;
+}
+
+.product-card:hover {
+   transform: scale(1.05);
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Рейтинг продукта */
+.product-rating {
+   display: flex;
+   justify-content: center;
+   margin-top: 10px;
+}
+
+.star-icon {
+   margin-right: 5px;
+}
+
+/* Слайдер */
+.slider {
+   display: flex;
+   justify-content: center;
+   gap: 10px;
+   margin-top: 20px;
+}
+
+.slider-button {
+   width: 30px;
+   height: 30px;
+   border: none;
+   border-radius: 50%;
+   background-color: #fff;
+   cursor: pointer;
+   font-size: 14px;
+   color: black;
+}
+
+.slider-button.active {
+   background-color: #E8AA31;
+   color: white;
+}
+
+.slider-button:hover {
+   background-color: #e0e0e0;
+}
+
+/* Общие стили для кнопок и элементов */
+button {
+   border: none;
+   padding: 10px 20px;
+   border-radius: 5px;
+   background-color: #E8AA31;
+   color: white;
+   cursor: pointer;
+   transition: background-color 0.3s;
+}
+
+button:hover {
+   background-color: #e89c1f;
+}
+</style>
